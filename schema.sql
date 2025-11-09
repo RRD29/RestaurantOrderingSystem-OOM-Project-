@@ -1,5 +1,5 @@
 -- Users table for role-based authentication
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE users (
 );
 
 -- Customers table for customer management
-CREATE TABLE customers (
+CREATE TABLE IF NOT EXISTS customers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     mobile VARCHAR(15) UNIQUE NOT NULL,
@@ -17,10 +17,11 @@ CREATE TABLE customers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE menu_items (
+-- Menu items table with category segregation
+CREATE TABLE IF NOT EXISTS menu_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    category VARCHAR(50),
+    category ENUM('Main Course','Desserts','Snacks','Beverages','Roti','Starters') NOT NULL,
     description TEXT,
     price DECIMAL(10,2) NOT NULL,
     availability BOOLEAN DEFAULT TRUE,
@@ -28,7 +29,8 @@ CREATE TABLE menu_items (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE orders (
+-- Orders table
+CREATE TABLE IF NOT EXISTS orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT,
     customer_name VARCHAR(100),
@@ -42,7 +44,8 @@ CREATE TABLE orders (
     FOREIGN KEY (waiter_id) REFERENCES users(id)
 );
 
-CREATE TABLE order_items (
+-- Order items table
+CREATE TABLE IF NOT EXISTS order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT,
     menu_id INT,
@@ -54,14 +57,16 @@ CREATE TABLE order_items (
     FOREIGN KEY (menu_id) REFERENCES menu_items(id)
 );
 
--- Insert default admin user
-INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'ADMIN');
+-- Insert default admin user (ignore if exists)
+INSERT IGNORE INTO users (username, password, role) VALUES ('admin', 'admin123', 'ADMIN');
 
 -- Insert sample menu items
-INSERT INTO menu_items (name, category, description, price, availability) VALUES
-('Margherita Pizza', 'Pizza', 'Classic cheese pizza with tomato sauce', 250.00, true),
-('Pepperoni Pizza', 'Pizza', 'Spicy pepperoni with cheese', 350.00, true),
-('Chicken Burger', 'Snacks', 'Grilled chicken burger with fries', 180.00, true),
-('French Fries', 'Snacks', 'Crispy golden fries', 80.00, true),
-('Coca Cola', 'Beverages', 'Refreshing cola drink', 50.00, true),
-('Ice Cream', 'Desserts', 'Vanilla ice cream scoop', 60.00, true);
+INSERT IGNORE INTO menu_items (name, category, description, price, availability) VALUES
+('Margherita Pizza', 'Main Course', 'Classic cheese pizza with tomato sauce', 250.00, TRUE),
+('Pepperoni Pizza', 'Main Course', 'Spicy pepperoni with cheese', 350.00, TRUE),
+('Chicken Burger', 'Snacks', 'Grilled chicken burger with fries', 180.00, TRUE),
+('French Fries', 'Snacks', 'Crispy golden fries', 80.00, TRUE),
+('Coca Cola', 'Beverages', 'Refreshing cola drink', 50.00, TRUE),
+('Ice Cream', 'Desserts', 'Vanilla ice cream scoop', 60.00, TRUE),
+('Butter Roti', 'Roti', 'Soft Indian flatbread', 20.00, TRUE),
+('Paneer Tikka', 'Starters', 'Spiced paneer cubes grilled', 150.00, TRUE);
