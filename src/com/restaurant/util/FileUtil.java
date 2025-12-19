@@ -1,4 +1,4 @@
-package com.restaurant.service;
+package com.restaurant.util;
 
 import java.io.*;
 import java.util.*;

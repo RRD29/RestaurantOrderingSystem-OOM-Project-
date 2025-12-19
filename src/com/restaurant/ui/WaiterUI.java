@@ -21,12 +21,38 @@ public class WaiterUI extends JFrame {
     private Map<String, DefaultTableModel> categoryModels = new HashMap<>();
     private Map<String, JTable> categoryTables = new HashMap<>();
     private List<OrderItem> orderItems = new ArrayList<>();
+    private JTable customerTable;
+    private DefaultTableModel customerModel;
+    private JButton newCustomerBtn;
+    private JButton selectCustomerBtn;
+    private JButton backToCustomersBtn;
+    private JPanel customerPanel;
+    private JPanel orderPanel;
+    private Order selectedOrder;
 
     public WaiterUI() {
         setTitle("Waiter - Take Orders");
         setSize(700, 500);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(8,8));
+
+        // Customer selection panel
+        customerPanel = new JPanel(new BorderLayout());
+        customerModel = new DefaultTableModel(new Object[]{"Order ID","Customer Name","Table","Status"},0){
+            @Override public boolean isCellEditable(int row,int col){ return false; }
+        };
+        customerTable = new JTable(customerModel);
+        customerPanel.add(new JScrollPane(customerTable), BorderLayout.CENTER);
+
+        JPanel customerBtnPanel = new JPanel();
+        newCustomerBtn = new JButton("New Customer");
+        selectCustomerBtn = new JButton("Select Customer");
+        customerBtnPanel.add(newCustomerBtn);
+        customerBtnPanel.add(selectCustomerBtn);
+        customerPanel.add(customerBtnPanel, BorderLayout.SOUTH);
+
+        // Order panel (existing order taking UI)
+        orderPanel = new JPanel(new BorderLayout());
 
         // Customer info
         JPanel topPanel = new JPanel(new GridLayout(1,4,10,10));
@@ -36,7 +62,7 @@ public class WaiterUI extends JFrame {
         topPanel.add(new JLabel("Table Number:"));
         tableNumberField = new JTextField();
         topPanel.add(tableNumberField);
-        add(topPanel, BorderLayout.NORTH);
+        orderPanel.add(topPanel, BorderLayout.NORTH);
 
         // Menu with tabs for categories
         tabbedPane = new JTabbedPane();
@@ -54,7 +80,7 @@ public class WaiterUI extends JFrame {
             tabbedPane.addTab(cat, new JScrollPane(table));
         }
 
-        add(tabbedPane, BorderLayout.CENTER);
+        orderPanel.add(tabbedPane, BorderLayout.CENTER);
 
         // Buttons
         JPanel bottomPanel = new JPanel();
@@ -62,13 +88,23 @@ public class WaiterUI extends JFrame {
         JButton clearBtn = new JButton("Clear");
         JButton refreshBtn = new JButton("Refresh Menu");
         JButton viewMenuBtn = new JButton("View Menu");
+        backToCustomersBtn = new JButton("Back to Customers");
         bottomPanel.add(placeOrderBtn);
         bottomPanel.add(clearBtn);
         bottomPanel.add(refreshBtn);
         bottomPanel.add(viewMenuBtn);
-        add(bottomPanel, BorderLayout.SOUTH);
+        bottomPanel.add(backToCustomersBtn);
+        orderPanel.add(bottomPanel, BorderLayout.SOUTH);
 
+        // Start with customer panel
+        add(customerPanel, BorderLayout.CENTER);
+        loadCustomers();
         loadMenu();
+
+        // Button listeners
+        newCustomerBtn.addActionListener(e -> switchToNewCustomer());
+        selectCustomerBtn.addActionListener(e -> selectCustomer());
+        backToCustomersBtn.addActionListener(e -> switchToCustomerPanel());
 
         refreshBtn.addActionListener(e -> loadMenu());
 
@@ -148,16 +184,25 @@ public class WaiterUI extends JFrame {
             return;
         }
 
-        Order order = new Order(customerName, tableNumber, orderItems);
-        double gst = order.getTotal()*0.05;
-        double totalWithGst = order.getTotal()+gst;
-
         try{
-            int orderId = OrderService.createOrder(order);
-            if(orderId!=-1){
-                showReceipt(order,totalWithGst,gst);
-                clearOrderInputs();
-            } else JOptionPane.showMessageDialog(this,"Failed to place order");
+            if(selectedOrder != null){
+                // Add to existing order
+                boolean success = OrderService.addItemsToOrder(selectedOrder.getId(), orderItems);
+                if(success){
+                    JOptionPane.showMessageDialog(this,"Items added to existing order successfully!");
+                    clearOrderInputs();
+                } else JOptionPane.showMessageDialog(this,"Failed to add items to order");
+            } else {
+                // Create new order
+                Order order = new Order(customerName, tableNumber, orderItems);
+                double gst = order.getTotal()*0.05;
+                double totalWithGst = order.getTotal()+gst;
+                int orderId = OrderService.createOrder(order);
+                if(orderId!=-1){
+                    showReceipt(order,totalWithGst,gst);
+                    clearOrderInputs();
+                } else JOptionPane.showMessageDialog(this,"Failed to place order");
+            }
         } catch(SQLException e){
             JOptionPane.showMessageDialog(this,"Error saving order: "+e.getMessage());
             e.printStackTrace();
@@ -188,5 +233,54 @@ public class WaiterUI extends JFrame {
             }
         }
         orderItems.clear();
+    }
+
+    private void loadCustomers(){
+        customerModel.setRowCount(0);
+        List<Order> activeOrders = OrderService.getActiveOrders();
+        for(Order o : activeOrders){
+            customerModel.addRow(new Object[]{o.getId(), o.getCustomerName(), o.getTableNumber(), o.getStatus()});
+        }
+    }
+
+    private void switchToNewCustomer(){
+        selectedOrder = null;
+        customerNameField.setText("");
+        tableNumberField.setText("");
+        customerNameField.setEditable(true);
+        tableNumberField.setEditable(true);
+        switchToOrderPanel();
+    }
+
+    private void selectCustomer(){
+        int r = customerTable.getSelectedRow();
+        if(r == -1){
+            JOptionPane.showMessageDialog(this, "Select a customer");
+            return;
+        }
+        int orderId = (int) customerModel.getValueAt(r, 0);
+        String customerName = (String) customerModel.getValueAt(r, 1);
+        int tableNumber = (int) customerModel.getValueAt(r, 2);
+        selectedOrder = new Order(orderId, customerName, tableNumber, 0, ""); // dummy order for reference
+        customerNameField.setText(customerName);
+        tableNumberField.setText(String.valueOf(tableNumber));
+        customerNameField.setEditable(false);
+        tableNumberField.setEditable(false);
+        switchToOrderPanel();
+    }
+
+    private void switchToOrderPanel(){
+        remove(customerPanel);
+        add(orderPanel, BorderLayout.CENTER);
+        revalidate();
+        repaint();
+    }
+
+    private void switchToCustomerPanel(){
+        remove(orderPanel);
+        add(customerPanel, BorderLayout.CENTER);
+        loadCustomers();
+        revalidate();
+        repaint();
     }
 }

@@ -86,11 +86,24 @@ public class MenuService {
 
     // Delete a menu item
     public static void delete(int id) throws SQLException {
-        String sql = "DELETE FROM menu_items WHERE id = ?";
-        try (Connection c = DBUtil.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            ps.executeUpdate();
+        try (Connection c = DBUtil.getConnection()) {
+            c.setAutoCommit(false);
+            // First, delete order_items that reference this menu item
+            String deleteOrderItems = "DELETE FROM order_items WHERE menu_id = ?";
+            try (PreparedStatement psOrderItems = c.prepareStatement(deleteOrderItems)) {
+                psOrderItems.setInt(1, id);
+                psOrderItems.executeUpdate();
+            }
+            // Then, delete the menu item
+            String deleteMenuItem = "DELETE FROM menu_items WHERE id = ?";
+            try (PreparedStatement psMenuItem = c.prepareStatement(deleteMenuItem)) {
+                psMenuItem.setInt(1, id);
+                psMenuItem.executeUpdate();
+            }
+            c.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e;
         }
     }
 }
