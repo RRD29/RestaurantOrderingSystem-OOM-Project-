@@ -1,6 +1,6 @@
 # Restaurant Ordering System
 
-A comprehensive Java-based desktop application for managing restaurant operations including menu management, order taking, customer management, and sales reporting. It features a graphical user interface built with Java Swing and uses MySQL for data persistence.
+A comprehensive Java-based desktop application for managing restaurant operations including menu management, order taking, customer management, and sales reporting. It feares a graphical user interface built with Java Swing and uses MySQL for data persistence.
 
 ---
 
