@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 public class MenuService {
 
-    // Get all menu items from DB
     public static List<MenuItem> getAll() {
         List<MenuItem> list = new ArrayList<>();
         String sql = "SELECT id, name, price, category FROM menu_items ORDER BY category, name";
@@ -30,15 +29,12 @@ public class MenuService {
         }
         return list;
     }
-
-    // Get items grouped by category
     public static Map<String, List<MenuItem>> getItemsByCategory() {
         List<MenuItem> allItems = getAll();
         return allItems.stream()
                 .collect(Collectors.groupingBy(MenuItem::getCategory));
     }
 
-    // Add new menu item
     public static MenuItem add(String name, double price, String category) throws SQLException {
         String sql = "INSERT INTO menu_items (name, price, category) VALUES (?, ?, ?)";
         try (Connection c = DBUtil.getConnection();
@@ -60,7 +56,7 @@ public class MenuService {
         return null;
     }
 
-    // Update an existing menu item
+    
     public static void updateItem(int id, String name, double price, String category) throws SQLException {
         String sql = "UPDATE menu_items SET name = ?, price = ?, category = ? WHERE id = ?";
         try (Connection c = DBUtil.getConnection();
@@ -73,7 +69,6 @@ public class MenuService {
         }
     }
 
-    // Update price of an existing menu item
     public static void updatePrice(int id, double price) throws SQLException {
         String sql = "UPDATE menu_items SET price = ? WHERE id = ?";
         try (Connection c = DBUtil.getConnection();
@@ -84,17 +79,16 @@ public class MenuService {
         }
     }
 
-    // Delete a menu item
     public static void delete(int id) throws SQLException {
         try (Connection c = DBUtil.getConnection()) {
             c.setAutoCommit(false);
-            // First, delete order_items that reference this menu item
+           
             String deleteOrderItems = "DELETE FROM order_items WHERE menu_id = ?";
             try (PreparedStatement psOrderItems = c.prepareStatement(deleteOrderItems)) {
                 psOrderItems.setInt(1, id);
                 psOrderItems.executeUpdate();
             }
-            // Then, delete the menu item
+        
             String deleteMenuItem = "DELETE FROM menu_items WHERE id = ?";
             try (PreparedStatement psMenuItem = c.prepareStatement(deleteMenuItem)) {
                 psMenuItem.setInt(1, id);
