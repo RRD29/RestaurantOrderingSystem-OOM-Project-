@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class DBUtil {
 private static final String URL = "jdbc:mysql://localhost:3306/restaurant?serverTimezone=UTC";
 private static final String USER = "root";
-private static final String PASS = "Anurag@2005";
+private static final String PASS = "your_mysql_password";
 
     static {
         try {
