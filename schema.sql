@@ -1,4 +1,3 @@
--- Users table for role-based authentication
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -7,7 +6,6 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Customers table for customer management
 CREATE TABLE IF NOT EXISTS customers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -17,7 +15,6 @@ CREATE TABLE IF NOT EXISTS customers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Menu items table with category segregation
 CREATE TABLE IF NOT EXISTS menu_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -29,7 +26,6 @@ CREATE TABLE IF NOT EXISTS menu_items (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Orders table
 CREATE TABLE IF NOT EXISTS orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT,
@@ -44,7 +40,6 @@ CREATE TABLE IF NOT EXISTS orders (
     FOREIGN KEY (waiter_id) REFERENCES users(id)
 );
 
--- Order items table
 CREATE TABLE IF NOT EXISTS order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT,
@@ -57,7 +52,6 @@ CREATE TABLE IF NOT EXISTS order_items (
     FOREIGN KEY (menu_id) REFERENCES menu_items(id)
 );
 
--- Insert default admin user (ignore if exists)
 INSERT IGNORE INTO users (username, password, role) VALUES ('admin', 'admin123', 'ADMIN');
 
 -- Insert sample menu items
